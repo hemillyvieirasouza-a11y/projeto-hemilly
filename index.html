@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroSolo - Portal de Terrenos & Fazendas por m²</title>
+  <style>
+    :root {
+      --primary: #2e7d32;
+      --primary-dark: #1b5e20;
+      --accent: #f57c00;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --text: #333333;
+      --text-muted: #666666;
+      --border: #e0e0e0;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    header {
+      background-color: var(--primary-dark);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Container Principal */
+    .main-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      .main-container {
+        grid-template-columns: 320px 1fr;
+      }
+    }
+
+    /* Painel Lateral / Filtros */
+    aside {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      height: fit-content;
+    }
+
+    aside h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--primary-dark);
+    }
+
+    .filter-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .filter-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .filter-group input, .filter-group select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) / 2);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: calc(var(--radius) / 2);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-dark);
+    }
+
+    /* Seção do Mapa de Calor (Diferencial) */
+    .heatmap-section {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .heatmap-section h2 {
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .heatmap-placeholder {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 40%, #fff9c4 70%, #ffcc80 100%);
+      height: 180px;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed var(--primary);
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .heatmap-legend {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .color-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    /* Grid de Anúncios */
+    .listings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Cartão de Terreno */
+    article.card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      background-color: #e8f5e9;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-price-m2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+
+    .card-price-m2 span {
+      font-size: 0.85rem;
+      font-weight: normal;
+      color: var(--text-muted);
+    }
+
+    .card-body {
+      padding: 1.2rem;
+      flex-grow: 1;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-details {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .card-details li {
+      margin-bottom: 0.3rem;
+    }
+
+    .card-footer {
+      padding: 1rem 1.2rem;
+      background: #fafafa;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .total-price {
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    /* Tag de Oportunidade */
+    .badge {
+      background: var(--accent);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🌱 AgroSolo <span>| Marketplace Rural</span></h1>
+    <nav>
+      <small>Foco em Custo-Benefício por m²</small>
+    </nav>
+  </header>
+
+  <div class="main-container">
+
+    <aside>
+      <h2>Filtrar Terrenos</h2>
+      <form id="filter-form">
+        <div class="filter-group">
+          <label for="state">Estado (UF)</label>
+          <select id="state">
+            <option value="">Todos os Estados</option>
+            <option value="MT">Mato Grosso</option>
+            <option value="GO">Goiás</option>
+            <option value="MS">Mato Grosso do Sul</option>
+            <option value="MG">Minas Gerais</option>
+            <option value="BA">Bahia (MATOPIBA)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="max-m2-price">Preço Máximo por m² (R$)</label>
+          <input type="number" id="max-m2-price" placeholder="Ex: 2.50" step="0.10">
+        </div>
+
+        <div class="filter-group">
+          <label for="min-area">Área Mínima (m²)</label>
+          <input type="number" id="min-area" placeholder="Ex: 500000">
+        </div>
+
+        <button type="submit" class="btn-submit">Aplicar Filtros</button>
+      </form>
+    </aside>
+
+    <main>
+
+      <section class="heatmap-section">
+        <h2>🔥 Mapa de Calor do m² Rural no Brasil</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+          Média do valor por $m^2$ atualizada em tempo real com base nos anúncios ativos.
+        </p>
+        
+        <div class="heatmap-placeholder">
+          <strong>[ Camada Interactiva de Calor do Brasil ]</strong>
+          <small>Regiões em verde escuro representam as terras com menor custo por $m^2$ aproveitável.</small>
+        </div>
+
+        <div class="heatmap-legend">
+          <div class="legend-item">
+            <div class="color-box" style="background: #2e7d32;"></div> R$ 0,10 - R$ 1,00 / m²
+          </div>
+          <div class="legend-item">
+            <div class="color-box" style="background: #fbc02d;"></div> R$ 1,01 - R$ 3,00 / m²
+          </div>
+          <div class="legend-item">
+            <div class="color-box" style="background: #f57c00;"></div> > R$ 3,00 / m²
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 style="margin-bottom: 1rem; font-size: 1.2rem;">Áreas Disponíveis</h2>
+        
+        <div class="listings-grid" id="listings">
+          
+          <article class="card">
+            <div class="card-header">
+              <span class="badge">Oportunidade</span>
+              <div class="card-price-m2">R$ 0,35 <span>/ m²</span></div>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Fazenda Grãos do Cerrado</h3>
+              <ul class="card-details">
+                <li><strong>Localização:</strong> Balsas - BA</li>
+                <li><strong>Área Total:</strong> 10.000.000 m² (1.000 ha)</li>
+                <li><strong>Aptidão:</strong> Agrícola / Soja</li>
+              </ul>
+            </div>
+            <div class="card-footer">
+              <span>Valor Total:</span>
+              <span class="total-price">R$ 3.500.000</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div class="card-price-m2">R$ 1,20 <span>/ m²</span></div>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Gleba Vale do Araguaia</h3>
+              <ul class="card-details">
+                <li><strong>Localização:</strong> Nova Xavantina - MT</li>
+                <li><strong>Área Total:</strong> 5.000.000 m² (500 ha)</li>
+                <li><strong>Aptidão:</strong> Pecuária / Pastagem</li>
+              </ul>
+            </div>
+            <div class="card-footer">
+              <span>Valor Total:</span>
+              <span class="total-price">R$ 6.000.000</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div class="card-price-m2">R$ 2,80 <span>/ m²</span></div>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Estância Primavera</h3>
+              <ul class="card-details">
+                <li><strong>Localização:</strong> Rio Verde - GO</li>
+                <li><strong>Área Total:</strong> 2.000.000 m² (200 ha)</li>
+                <li><strong>Aptidão:</strong> Dupla Aptidão / Irrigada</li>
+              </ul>
+            </div>
+            <div class="card-footer">
+              <span>Valor Total:</span>
+              <span class="total-price">R$ 5.600.000</span>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Interatividade Básica (Filtro Simulado via JavaScript)
+    document.getElementById('filter-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Filtros aplicados! Em uma aplicação de produção, isso requisitaria dados dinâmicos do servidor via API.');
+    });
+  </script>
+
+</body>
+</html>
